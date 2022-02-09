@@ -6,3 +6,4 @@ log
 *.patch
 
 
+/checkstyle.xml
