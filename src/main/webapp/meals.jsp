@@ -2,7 +2,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
-    <style><%@include file="/WEB-INF/css/style.css"%></style>
+    <style>
+        <%@include file="/WEB-INF/css/style.css" %>
+    </style>
     <title>Meals</title>
 </head>
 <body>
@@ -20,16 +22,12 @@
     </thead>
     <tbody>
     <c:forEach items="${meals}" var="meal">
-        <c:set var="color" value="green" />
-        <c:if test="${meal.isExcess()}">
-            <c:set var="color" value="red" />
-        </c:if>
-        <tr style="color: ${color}">
-            <td>${FORMATTER.format(meal.getDateTime())}</td>
-            <td>${meal.getDescription()}</td>
-            <td>${meal.getCalories()}</td>
-            <td><a href="${pageContext.request.contextPath}/meals?action=edit&mealId=<c:out value="${meal.getId()}"/>">Update</a></td>
-            <td><a href="${pageContext.request.contextPath}/meals?action=delete&mealId=<c:out value="${meal.getId()}"/>">Delete</a></td>
+        <tr style="color: ${meal.isExcess() ? "red" : "green"}">
+            <td>${FORMATTER.format(meal.dateTime)}</td>
+            <td>${meal.description}</td>
+            <td>${meal.calories}</td>
+            <td><a href="${pageContext.request.contextPath}/meals?action=edit&mealId=${meal.id}">Update</a></td>
+            <td><a href="${pageContext.request.contextPath}/meals?action=delete&mealId=${meal.id}">Delete</a></td>
         </tr>
     </c:forEach>
     </tbody>

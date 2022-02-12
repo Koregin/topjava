@@ -1,24 +1,27 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <html>
 <head>
     <title>Add new meal</title>
 </head>
 <body>
+<h3><a href="index.html">Home</a></h3>
+<hr>
+<h2>${actionTitle}</h2>
 <form method="POST" action='meals' name="frmAddMeal">
-    <input type="hidden" readonly="readonly" name="mealId" value="<c:out value="${meal.getId()}" />" /> <br />
-    DateTime : <input
-        type="text" name="dateTime"
-        <fmt:parseDate value="${meal.getDateTime()}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDateTime" />
-        value="<fmt:formatDate pattern="yyyy-MM-dd HH:mm" value="${parsedDateTime}" />" /><br />
+    <input type="hidden" readonly="readonly" name="mealId" value="${meal.id}"/> <br/>
+    <label for="dateTime">DateTime:</label>
+    <input type="datetime-local" id="dateTime" name="dateTime"
+           value="${meal.dateTime != null ? meal.dateTime : dateTimeNow}"/><br/>
     Description : <input
         type="text" name="description"
-        value="<c:out value="${meal.getDescription()}" />" /> <br />
+        value="${meal.description}"/><br/>
     Calories : <input
-        type="text" name="calories"
-        value="<c:out value="${meal.getCalories()}" />" /> <br />
-    <input type="submit" value="Submit" />
+        type="number" min="1" max="1000000" name="calories"
+        value="${meal.calories}"/> <br/>
+    <input type="submit" value="Save"/>
+    <input class="button" type="button" onclick="window.location.replace('meals')" value="Cancel"/>
 </form>
 </body>
 </html>
