@@ -9,9 +9,9 @@ public interface MealStorage {
 
     Meal update(Meal meal);
 
-    Meal delete(Integer id);
+    boolean delete(int id);
 
     List<Meal> findAll();
 
-    Meal findById(Integer id);
+    Meal findById(int id);
 }

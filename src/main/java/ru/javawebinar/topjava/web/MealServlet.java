@@ -14,20 +14,21 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class MealServlet extends HttpServlet {
-    private static final Logger log = getLogger(MealServlet.class);
     public static final int KILOCALORIES = 2000;
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final String CREATE_OR_UPDATE = "/meal.jsp";
     private static final String LIST_MEAL = "/meals.jsp";
-    private final MealStorage mealStorage = new MemMealStorage();
+    private static final Logger log = getLogger(MealServlet.class);
+    private MealStorage mealStorage;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
+        this.mealStorage = new MemMealStorage();
     }
 
     @Override
@@ -36,38 +37,34 @@ public class MealServlet extends HttpServlet {
         String forward = "";
         String action = request.getParameter("action");
         action = action == null ? "listMeals" : action;
-        log.debug("Action " + action);
+        log.debug("Action {}", action);
 
-        switch (action) {
+        switch (action.toLowerCase()) {
             case "delete":
                 mealStorage.delete(getMealId(request));
-                request.setAttribute("meals", MealsUtil.filteredByStreams(mealStorage.findAll(), LocalTime.MIN, LocalTime.MAX, KILOCALORIES));
                 response.sendRedirect("meals");
                 return;
             case "edit":
                 forward = CREATE_OR_UPDATE;
                 request.setAttribute("meal", mealStorage.findById(getMealId(request)));
-                request.setAttribute("actionTitle", "Edit meal");
                 break;
             case "create":
-                log.debug("Create or update");
                 forward = CREATE_OR_UPDATE;
-                request.setAttribute("actionTitle", "Add meal");
-                request.setAttribute("dateTimeNow", LocalDateTime.now().withSecond(0).withNano(0));
+                request.setAttribute("dateTimeNow", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
                 break;
             default:
                 forward = LIST_MEAL;
                 request.setAttribute("meals", MealsUtil.filteredByStreams(mealStorage.findAll(), LocalTime.MIN, LocalTime.MAX, KILOCALORIES));
+                request.setAttribute("FORMATTER", FORMATTER);
                 break;
         }
-        request.setAttribute("FORMATTER", FORMATTER);
         request.getRequestDispatcher(forward).forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        LocalDateTime datetime = LocalDateTime.parse(request.getParameter("dateTime"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+        LocalDateTime datetime = LocalDateTime.parse(request.getParameter("dateTime"));
         int calories = Integer.parseInt(request.getParameter("calories"));
         Meal meal = new Meal(datetime, request.getParameter("description"), calories);
         String mealIdStr = request.getParameter("mealId");
@@ -77,16 +74,15 @@ public class MealServlet extends HttpServlet {
             mealStorage.create(meal);
         } else {
             log.debug("Updating meal");
-            Integer mealId = Integer.parseInt(mealIdStr);
+            int mealId = Integer.parseInt(mealIdStr);
             meal.setId(mealId);
-            log.debug("Meal update ID=" + meal.getId().toString());
+            log.debug("Meal update ID={}", mealId);
             mealStorage.update(meal);
         }
-        request.setAttribute("meals", MealsUtil.filteredByStreams(mealStorage.findAll(), LocalTime.MIN, LocalTime.MAX, KILOCALORIES));
         response.sendRedirect("meals");
     }
 
-    public Integer getMealId(HttpServletRequest request) {
+    public int getMealId(HttpServletRequest request) {
         return Integer.parseInt(request.getParameter("mealId"));
     }
 }

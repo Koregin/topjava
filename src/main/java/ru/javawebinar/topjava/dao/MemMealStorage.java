@@ -38,13 +38,12 @@ public class MemMealStorage implements MealStorage {
 
     @Override
     public Meal update(Meal meal) {
-        mealsMap.computeIfPresent(meal.getId(), (k, v) -> meal);
-        return meal;
+        return mealsMap.compute(meal.getId(), (k, v) -> meal);
     }
 
     @Override
-    public Meal delete(Integer id) {
-        return mealsMap.remove(id);
+    public boolean delete(int id) {
+        return mealsMap.remove(id) != null;
     }
 
     @Override
@@ -53,7 +52,7 @@ public class MemMealStorage implements MealStorage {
     }
 
     @Override
-    public Meal findById(Integer id) {
+    public Meal findById(int id) {
         return mealsMap.get(id);
     }
 }
