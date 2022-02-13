@@ -7,11 +7,12 @@ import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MemMealStorage implements MealStorage {
-    private final ConcurrentHashMap<Integer, Meal> mealsMap = new ConcurrentHashMap<>();
+    private final Map<Integer, Meal> mealsMap = new ConcurrentHashMap<>();
     private final AtomicInteger counter = new AtomicInteger();
 
     public MemMealStorage() {
@@ -38,7 +39,7 @@ public class MemMealStorage implements MealStorage {
 
     @Override
     public Meal update(Meal meal) {
-        return mealsMap.compute(meal.getId(), (k, v) -> meal);
+        return mealsMap.replace(meal.getId(), meal);
     }
 
     @Override
