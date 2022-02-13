@@ -39,11 +39,7 @@ public class MemMealStorage implements MealStorage {
 
     @Override
     public Meal update(Meal meal) {
-        Meal mealResult = mealsMap.replace(meal.getId(), meal);
-        if (mealResult != null) {
-            mealResult = meal;
-        }
-        return  mealResult;
+        return  mealsMap.replace(meal.getId(), meal) != null ? meal : null;
     }
 
     @Override
