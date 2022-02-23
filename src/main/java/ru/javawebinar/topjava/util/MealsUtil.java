@@ -1,11 +1,13 @@
 package ru.javawebinar.topjava.util;
 
 import ru.javawebinar.topjava.model.Meal;
-import ru.javawebinar.topjava.model.MealTo;
+import ru.javawebinar.topjava.model.Role;
+import ru.javawebinar.topjava.model.User;
+import ru.javawebinar.topjava.to.MealTo;
+import ru.javawebinar.topjava.web.SecurityUtil;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.Month;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,24 +20,31 @@ public class MealsUtil {
     public static final int DEFAULT_CALORIES_PER_DAY = 2000;
 
     public static final List<Meal> meals = Arrays.asList(
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 10, 0), "Завтрак", 500),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 13, 0), "Обед", 1000),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 20, 0), "Ужин", 500),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 0, 0), "Еда на граничное значение", 100),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 10, 0), "Завтрак", 1000),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 13, 0), "Обед", 500),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410)
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 10, 0), "Завтрак", 500, SecurityUtil.authUserId()),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 13, 0), "Обед", 1000, SecurityUtil.authUserId()),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 20, 0), "Ужин", 500, SecurityUtil.authUserId()),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 0, 0), "Еда на граничное значение", 100, SecurityUtil.authUserId()),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 10, 0), "Завтрак", 1000, SecurityUtil.authUserId()),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 13, 0), "Обед", 500, SecurityUtil.authUserId()),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410, SecurityUtil.authUserId())
+    );
+
+    public static final List<User> users = Arrays.asList(
+            new User(null, "Vasya Pupkin", "vasya@gmail.com", "passwd1", Role.USER),
+            new User(null, "Till Lindemann", "tillberling@bg.com", "passwd2", Role.USER)
     );
 
     public static List<MealTo> getTos(Collection<Meal> meals, int caloriesPerDay) {
-        return filterByPredicate(meals, caloriesPerDay, meal -> true);
+        return filterByPredicate(meals, caloriesPerDay, meal -> true, meal -> true);
     }
 
-    public static List<MealTo> getFilteredTos(Collection<Meal> meals, int caloriesPerDay, LocalTime startTime, LocalTime endTime) {
-        return filterByPredicate(meals, caloriesPerDay, meal -> DateTimeUtil.isBetweenHalfOpen(meal.getTime(), startTime, endTime));
+    public static List<MealTo> getFilteredTos(Collection<Meal> meals, int caloriesPerDay, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        Predicate<Meal> filterDate = meal -> DateTimeUtil.isBetweenHalfOpenDate(meal.getDateTime(), startDateTime, endDateTime);
+        Predicate<Meal> filterTime = meal -> DateTimeUtil.isBetweenHalfOpenTime(meal.getDateTime(), startDateTime, endDateTime);
+        return filterByPredicate(meals, caloriesPerDay, filterDate, filterTime);
     }
 
-    public static List<MealTo> filterByPredicate(Collection<Meal> meals, int caloriesPerDay, Predicate<Meal> filter) {
+    public static List<MealTo> filterByPredicate(Collection<Meal> meals, int caloriesPerDay, Predicate<Meal> filterDate, Predicate<Meal> filterTime) {
         Map<LocalDate, Integer> caloriesSumByDate = meals.stream()
                 .collect(
                         Collectors.groupingBy(Meal::getDate, Collectors.summingInt(Meal::getCalories))
@@ -43,7 +52,8 @@ public class MealsUtil {
                 );
 
         return meals.stream()
-                .filter(filter)
+                .filter(filterDate)
+                .filter(filterTime)
                 .map(meal -> createTo(meal, caloriesSumByDate.get(meal.getDate()) > caloriesPerDay))
                 .collect(Collectors.toList());
     }
