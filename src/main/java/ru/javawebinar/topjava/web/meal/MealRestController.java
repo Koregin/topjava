@@ -8,9 +8,11 @@ import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.to.MealTo;
 import ru.javawebinar.topjava.util.MealsUtil;
+import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.SecurityUtil;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
@@ -18,40 +20,57 @@ import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
 public class MealRestController {
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private MealService service;
 
-    public List<MealTo> getAllFilter(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+    public List<MealTo> getAllFilter(LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
         log.info("getAll with filter for ID = {}", SecurityUtil.authUserId());
-        return MealsUtil.getFilteredTos(service.getAll(SecurityUtil.authUserId()), MealsUtil.DEFAULT_CALORIES_PER_DAY, startDateTime, endDateTime);
+        List<Meal> mealsFilterByDate = service.getAllFilter(SecurityUtil.authUserId(),
+                startDate != null ? startDate : LocalDate.MIN,
+                endDate != null ? endDate.plusDays(1) : LocalDate.MAX);
+        return MealsUtil.getFilteredTos(mealsFilterByDate, SecurityUtil.authUserCaloriesPerDay(),
+                startTime != null ? startTime : LocalTime.MIN,
+                endTime != null ? endTime : LocalTime.MAX);
     }
 
     public List<MealTo> getAll() {
-        log.info("getAll for ID = {}", SecurityUtil.authUserId());
-        return  MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), MealsUtil.DEFAULT_CALORIES_PER_DAY);
+        log.info("getAll for userID = {}", SecurityUtil.authUserId());
+        return  MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), SecurityUtil.authUserCaloriesPerDay());
     }
 
     public Meal get(int id) {
         log.info("get {}", id);
-        return service.get(id);
+        return service.get(id, SecurityUtil.authUserId());
     }
 
     public Meal create(Meal meal) {
         log.info("create {}", meal);
         checkNew(meal);
-        return service.create(meal);
+        return service.create(meal, SecurityUtil.authUserId());
     }
 
     public void delete(int id) {
         log.info("delete {}", id);
-        service.delete(id);
+        service.delete(id, SecurityUtil.authUserId());
     }
 
     public void update(Meal meal, int id) {
+        boolean userVerify = false;
+        for (Meal checkMeal : service.getAll(SecurityUtil.authUserId())) {
+            if (checkMeal.getId() == id) {
+                userVerify = true;
+                log.debug("Meal for update have user ID = {}", checkMeal.getUserId());
+                break;
+            }
+        }
+        if (!userVerify) {
+            throw new NotFoundException("User id is not equal meal id");
+        }
         log.info("update {} with id={}", meal, id);
+        meal.setUserId(SecurityUtil.authUserId());
         assureIdConsistent(meal, id);
-        service.update(meal);
+        service.update(meal, SecurityUtil.authUserId());
     }
 }

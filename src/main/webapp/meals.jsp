@@ -21,8 +21,8 @@
     <h3><a href="index.html">Home</a></h3>
     <hr/>
     <h2>Meals</h2>
-    <form method="post" action="meals">
-        <input type="hidden" name="purpose" value="filter">
+    <form method="get" action="meals">
+        <input type="hidden" name="action" value="filter">
         <dl>
             <dt>От даты(включая)</dt>
             <dt><input type="date" name="dateFrom" value="${dateFrom}"></dt>
@@ -40,7 +40,6 @@
             <dt><input type="time" name="timeTo" value="${timeTo}"></dt>
         </dl>
         <button type="submit">Отфильтровать</button>
-
     </form>
     <a href="meals?action=create">Add Meal</a>
     <br><br>
