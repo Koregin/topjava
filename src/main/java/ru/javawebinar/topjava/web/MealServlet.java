@@ -42,14 +42,14 @@ public class MealServlet extends HttpServlet {
         Meal meal = new Meal(id.isEmpty() ? null : Integer.valueOf(id),
                 LocalDateTime.parse(request.getParameter("dateTime")),
                 request.getParameter("description"),
-                Integer.parseInt(request.getParameter("calories")), 0);
+                Integer.parseInt(request.getParameter("calories")), null);
 
         log.info(meal.isNew() ? "Create {}" : "Update {}", meal);
         if (meal.isNew()) {
-                mealRestController.create(meal);
-            } else {
-                mealRestController.update(meal, getId(request));
-            }
+            mealRestController.create(meal);
+        } else {
+            mealRestController.update(meal);
+        }
         response.sendRedirect("meals");
     }
 
@@ -79,10 +79,10 @@ public class MealServlet extends HttpServlet {
                 String timeTo = request.getParameter("timeTo");
                 log.info("filter || DateFrom: {}, DateTo: {}, TimeFrom: {}, TimeTo: {}", dateFrom, dateTo, timeFrom, timeTo);
                 request.setAttribute("meals", mealRestController.getAllFilter(
-                        dateFrom.isEmpty() ? null : LocalDate.parse(dateFrom),
-                        dateTo.isEmpty() ? null : LocalDate.parse(dateTo),
-                        timeFrom.isEmpty() ? null : LocalTime.parse(timeFrom),
-                        timeTo.isEmpty() ? null : LocalTime.parse(timeTo)));
+                        dateFrom == null || dateFrom.isEmpty() ? null : LocalDate.parse(dateFrom),
+                        dateTo == null || dateTo.isEmpty() ? null : LocalDate.parse(dateTo),
+                        timeFrom == null || timeFrom.isEmpty() ? null : LocalTime.parse(timeFrom),
+                        timeTo == null || timeTo.isEmpty() ? null : LocalTime.parse(timeTo)));
                 request.getRequestDispatcher("/meals.jsp").forward(request, response);
                 break;
             case "all":

@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
-import ru.javawebinar.topjava.util.MealsUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,16 +43,15 @@ public class InMemoryUserRepository implements UserRepository {
     public List<User> getAll() {
         log.info("getAll");
         List<User> usersList = new ArrayList<>(repository.values());
-        usersList.sort(Comparator.comparing((User o) -> o.getName()).thenComparing(User::getEmail));
+        usersList.sort(Comparator.comparing(User::getName).thenComparing(User::getEmail));
         return usersList;
     }
 
     @Override
     public User getByEmail(String email) {
         log.info("getByEmail {}", email);
-        Optional<User> foundUser = repository.values().stream()
+        return repository.values().stream()
                 .filter(user -> email.equalsIgnoreCase(user.getEmail()))
-                .findFirst();
-        return foundUser.orElse(null);
+                .findFirst().orElse(null);
     }
 }

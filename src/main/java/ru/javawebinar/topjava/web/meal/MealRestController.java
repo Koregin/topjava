@@ -8,14 +8,12 @@ import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.to.MealTo;
 import ru.javawebinar.topjava.util.MealsUtil;
-import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.SecurityUtil;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
 import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
@@ -37,7 +35,7 @@ public class MealRestController {
 
     public List<MealTo> getAll() {
         log.info("getAll for userID = {}", SecurityUtil.authUserId());
-        return  MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), SecurityUtil.authUserCaloriesPerDay());
+        return MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), SecurityUtil.authUserCaloriesPerDay());
     }
 
     public Meal get(int id) {
@@ -56,21 +54,7 @@ public class MealRestController {
         service.delete(id, SecurityUtil.authUserId());
     }
 
-    public void update(Meal meal, int id) {
-        boolean userVerify = false;
-        for (Meal checkMeal : service.getAll(SecurityUtil.authUserId())) {
-            if (checkMeal.getId() == id) {
-                userVerify = true;
-                log.debug("Meal for update have user ID = {}", checkMeal.getUserId());
-                break;
-            }
-        }
-        if (!userVerify) {
-            throw new NotFoundException("User id is not equal meal id");
-        }
-        log.info("update {} with id={}", meal, id);
-        meal.setUserId(SecurityUtil.authUserId());
-        assureIdConsistent(meal, id);
+    public void update(Meal meal) {
         service.update(meal, SecurityUtil.authUserId());
     }
 }
