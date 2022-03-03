@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.util.StringUtils;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.web.meal.MealRestController;
 
@@ -48,7 +49,7 @@ public class MealServlet extends HttpServlet {
         if (meal.isNew()) {
             mealRestController.create(meal);
         } else {
-            mealRestController.update(meal);
+            mealRestController.update(meal, getId(request));
         }
         response.sendRedirect("meals");
     }
@@ -79,10 +80,10 @@ public class MealServlet extends HttpServlet {
                 String timeTo = request.getParameter("timeTo");
                 log.info("filter || DateFrom: {}, DateTo: {}, TimeFrom: {}, TimeTo: {}", dateFrom, dateTo, timeFrom, timeTo);
                 request.setAttribute("meals", mealRestController.getAllFilter(
-                        dateFrom == null || dateFrom.isEmpty() ? null : LocalDate.parse(dateFrom),
-                        dateTo == null || dateTo.isEmpty() ? null : LocalDate.parse(dateTo),
-                        timeFrom == null || timeFrom.isEmpty() ? null : LocalTime.parse(timeFrom),
-                        timeTo == null || timeTo.isEmpty() ? null : LocalTime.parse(timeTo)));
+                        StringUtils.hasLength(dateFrom) ? LocalDate.parse(dateFrom) : null,
+                        StringUtils.hasLength(dateTo) ? LocalDate.parse(dateTo) : null,
+                        StringUtils.hasLength(timeFrom) ? LocalTime.parse(timeFrom) : null,
+                        StringUtils.hasLength(timeTo) ? LocalTime.parse(timeTo) : null));
                 request.getRequestDispatcher("/meals.jsp").forward(request, response);
                 break;
             case "all":
