@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryMealRepository implements MealRepository {
-    private final Map<Integer, Meal> repository = new ConcurrentHashMap<>();
+    private final Map<Integer, Map<Integer, Meal>> repository = new ConcurrentHashMap<>();
     private final AtomicInteger counter = new AtomicInteger(0);
 
     {
@@ -31,12 +31,18 @@ public class InMemoryMealRepository implements MealRepository {
         if (meal.isNew()) {
             meal.setId(counter.incrementAndGet());
             meal.setUserId(userId);
-            repository.put(meal.getId(), meal);
+            if (repository.containsKey(userId)) {
+                repository.get(userId).put(meal.getId(), meal);
+            } else {
+                repository.put(userId, new ConcurrentHashMap<Integer, Meal>() {{
+                    put(meal.getId(), meal);
+                }});
+            }
             resultMeal = meal;
         } else {
             if (get(meal.getId(), userId) != null) {
                 meal.setUserId(userId);
-                resultMeal = repository.computeIfPresent(meal.getId(), (id, oldMeal) -> meal);
+                resultMeal = repository.get(userId).computeIfPresent(meal.getId(), (id, oldMeal) -> meal);
             }
         }
         return resultMeal;
@@ -44,12 +50,12 @@ public class InMemoryMealRepository implements MealRepository {
 
     @Override
     public boolean delete(int id, int userId) {
-        return get(id, userId) != null && repository.remove(id) != null;
+        return get(id, userId) != null && repository.get(userId).remove(id) != null;
     }
 
     @Override
     public Meal get(int id, int userId) {
-        Meal meal = repository.get(id);
+        Meal meal = repository.get(userId).get(id);
         return meal != null && Objects.equals(meal.getUserId(), userId) ? meal : null;
     }
 
@@ -65,7 +71,7 @@ public class InMemoryMealRepository implements MealRepository {
     }
 
     private List<Meal> filterByPredicateForGet(int userId, Predicate<Meal> filter) {
-        return repository.values().stream()
+        return repository.get(userId).values().stream()
                 .filter(meal -> Objects.equals(meal.getUserId(), userId))
                 .filter(filter)
                 .sorted(Comparator.comparing(Meal::getDateTime).reversed())
